@@ -9,7 +9,5 @@ services:
   solana-cli:
     build:
       context: ./solanaCli
-      args:
-        - SOLANA_CLUSTER_IP="172.17.0.1"
-        - HTTP_RPC_PORT="8899"
     tty: true
+    command: 172.17.0.1 8899
