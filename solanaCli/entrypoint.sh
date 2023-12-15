@@ -27,5 +27,3 @@ done
 # Connect to local cluster
 echo "Connecting to Solana local cluster ..."
 solana config set --url http://${SOLANA_CLUSTER_IP}:${HTTP_RPC_PORT}
-
-# Create wallet
