@@ -7,15 +7,26 @@ const SOLANA_CLUSTER = "testnet"
 const network = clusterApiUrl(SOLANA_CLUSTER);
 // Create new keypair
 let keypair = Keypair.generate();
+console.log("Pub key: ", keypair.publicKey.toString())
 // Create connection
-let connection = new Connection(network)
+let connection = new Connection('http://172.17.0.1:8899', 'confirmed')
+//let connection = new Connection(network)
+console.log(connection)
+// Test
+let test = await connection.getBlockHeight()
+console.log("Block height: ", test)
+// let balance = await connection.getAccountInfo(keypair.publicKey)
+// console.log(balance)
 // Airdrop some sol to the account
 let airdropSignature = await connection.requestAirdrop(
   keypair.publicKey,
-  LAMPORTS_PER_SOL
+  1
 );
+console.log("Signature:", airdropSignature)
 
 await connection.confirmTransaction({ signature: airdropSignature });
+balance = await connection.getBalance(keypair.publicKey)
+console.log(balance)
 
 function App() {
   return (
