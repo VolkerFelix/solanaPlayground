@@ -10,4 +10,6 @@ services:
     build:
       context: ./solanaCli
     tty: true
-    command: 172.17.0.1 8899
+    command: 172.17.0.1 8899 true
+    volumes:
+      - /home/volker/repos/solanaPlayground/reactApp/app/src/keypair:/home/keypair:rw

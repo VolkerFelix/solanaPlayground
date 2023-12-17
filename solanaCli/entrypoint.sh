@@ -2,6 +2,7 @@
 
 SOLANA_CLUSTER_IP=$1
 HTTP_RPC_PORT=$2
+CREATE_NEW_KEYPAIR=$3
 
 # Check if local cluster is available
 RETRIES=5
@@ -27,6 +28,13 @@ done
 # Connect to local cluster
 echo "Connecting to Solana local cluster ..."
 solana config set --url http://${SOLANA_CLUSTER_IP}:${HTTP_RPC_PORT}
+
+# Create new keypair if requested
+if [ $3 == true ]; then
+    echo "Creating new keypair ..."
+    solana-keygen new --outfile keypair/keypair.json --no-bip39-passphrase
+    chown volker:volker keypair/keypair.json
+fi
 
 # Keep container alive
 read -p "I'm alive"

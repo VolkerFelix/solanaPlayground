@@ -7,9 +7,12 @@ RUN apt-get update -y
 RUN apt-get install -y \
     wget \
     bzip2 \
-    curl
+    curl \
+    nano
 
 WORKDIR /home
+
+RUN mkdir keypair
 
 RUN mkdir .solana &&\
     cd .solana &&\
@@ -18,8 +21,10 @@ RUN mkdir .solana &&\
 
 ENV PATH="${PATH}:/home/.solana/solana-release/bin"
 
+RUN useradd volker
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD [ "SOLANA_CLUSTER_IP", "HTTP_RPC_PORT" ]
+CMD [ "SOLANA_CLUSTER_IP", "HTTP_RPC_PORT", "REQUEST_NEW_KEYPAIR" ]
