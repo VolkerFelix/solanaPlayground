@@ -32,8 +32,8 @@ solana config set --url http://${SOLANA_CLUSTER_IP}:${HTTP_RPC_PORT}
 # Create new keypair if requested
 if [ $3 == true ]; then
     echo "Creating new keypair ..."
-    solana-keygen new --outfile keypair/keypair.json --no-bip39-passphrase
-    chown volker:volker keypair/keypair.json
+    solana-keygen new --outfile keypair/new_keypair.json --no-bip39-passphrase
+    chown volker:volker keypair/new_keypair.json
 fi
 
 # Keep container alive

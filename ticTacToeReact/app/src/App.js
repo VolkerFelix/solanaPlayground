@@ -3,15 +3,23 @@ import { Keypair, Connection, PublicKey, Cluster, clusterApiUrl,
   LAMPORTS_PER_SOL, Transaction, SystemProgram, sendAndConfirmTransaction
 } from "@solana/web3.js";
 import splToken from "@solana/spl-token";
+import { getKp, Participants, getSolanaConnection, SolanaConnections, checkBalanceAndAirdropIfNeeded } from "./solana_stuff.js"
 
-import secret_x_json from "./keypair/player_x.json";
-import secret_o_json from "./keypair/player_o.json";
-// TODO: Import secret for token owner
+let kp_x = null;
+let kp_o = null;
+let kp_token_owner = null;
 
-const secret_x_a_u8 = Uint8Array.from(secret_x_json);
-const secret_o_a_u8 = Uint8Array.from(secret_o_json);
-const kp_x = Keypair.fromSecretKey(secret_x_a_u8);
-const kp_o = Keypair.fromSecretKey(secret_o_a_u8);
+try {
+  kp_x = getKp(Participants.X);
+  kp_o = getKp(Participants.O);
+  kp_token_owner = getKp(Participants.TOKEN_OWNER);
+} catch (e) {
+  console.log(e);
+}
+let connection = getSolanaConnection(SolanaConnections.LOCAL);
+let result = await checkBalanceAndAirdropIfNeeded(kp_token_owner, connection);
+
+console.log("Balance token owner: ", result);
 
 class CPlayer {
   constructor(name, pk) {
@@ -199,16 +207,4 @@ function calcWinner(squares) {
 function claimWinnersBatch(){
   // TODO:
   // Transfer one token to the winners pk
-}
-
-function initTokens() {
-  // TODO:
-  // Check if token owner has enough SOL, if not -> airdrop
-  // let mint = await splToken.Token.createMint(connection, myKeypair, myKeypair.publicKey, null, 9, splToken.TOKEN_PROGRAM_ID);
-  //
-  // Get the token accont of this solana address, if it does not exist, create it
-  // myToken = await mint.getOrCreateAssociatedAccountInfo(myKeypair.publicKey);
-  //
-  // Check if enough tokens are available, if not -> Mint 100 new tokens to the token address we just created
-  // await mint.mintTo(myToken.address, myKeypair.publicKey, [], 1000000000);
 }
