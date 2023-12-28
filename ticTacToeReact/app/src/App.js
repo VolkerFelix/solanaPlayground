@@ -3,7 +3,13 @@ import { Keypair, Connection, PublicKey, Cluster, clusterApiUrl,
   LAMPORTS_PER_SOL, Transaction, SystemProgram, sendAndConfirmTransaction
 } from "@solana/web3.js";
 import splToken from "@solana/spl-token";
-import { getKp, Participants, getSolanaConnection, SolanaConnections, checkBalanceAndAirdropIfNeeded } from "./solana_stuff.js"
+import {
+  getKp, Participants, getSolanaConnection, SolanaConnections, checkBalanceAndAirdropIfNeeded,
+  initMintAndTokenAccount, checkTokenAmountAndMintIfNeeded
+} from "./solana_stuff.js"
+
+import * as buffer from "buffer";
+window.Buffer = buffer.Buffer;
 
 let kp_x = null;
 let kp_o = null;
@@ -20,6 +26,13 @@ let connection = getSolanaConnection(SolanaConnections.LOCAL);
 let result = await checkBalanceAndAirdropIfNeeded(kp_token_owner, connection);
 
 console.log("Balance token owner: ", result);
+
+let [mint_pk, tokens_pk] = await initMintAndTokenAccount(connection, kp_token_owner);
+let token_balance = await checkTokenAmountAndMintIfNeeded(connection, kp_token_owner, mint_pk, tokens_pk);
+
+console.log("Mint PK: ", mint_pk);
+console.log("Token PK: ", tokens_pk);
+console.log("Token balance: ", token_balance);
 
 class CPlayer {
   constructor(name, pk) {

@@ -1,7 +1,10 @@
 import {
     Keypair, Connection, clusterApiUrl,
-    LAMPORTS_PER_SOL, RpcResponseAndContext, SignatureResult
+    LAMPORTS_PER_SOL,
+    PublicKey
 } from "@solana/web3.js";
+import * as splToken from "@solana/spl-token";
+
 
 import secret_x_json from "./keypair/player_x.json";
 import secret_o_json from "./keypair/player_o.json";
@@ -102,14 +105,68 @@ export async function checkBalanceAndAirdropIfNeeded(f_kp, f_connection) {
     }
     
     return balance;
+}
 
+/**
+ * Init a new mint and an associanted token account
+ * @param {Connection} f_connection 
+ * @param {Keypair} f_token_owner 
+ * @returns {[PublicKey, PublicKey]} PK of mint and token account
+ */
+export async function initMintAndTokenAccount(f_connection, f_token_owner) {
+    let mint_pk;
+    let token_account_pk;
+    try {
+        mint_pk = await splToken.createMint(
+            f_connection,
+            f_token_owner,
+            f_token_owner.publicKey,
+            null,
+            9
+        );
+        console.log("Mint PK: ", mint_pk.toString());
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        console.log("Waited 3s");
+        token_account_pk = await splToken.getOrCreateAssociatedTokenAccount(
+            f_connection,
+            f_token_owner,
+            mint_pk,
+            f_token_owner.publicKey,
+        );
+    } catch (e) {
+        console.log(e);
+    }
+    return [mint_pk, token_account_pk];
+}
 
-    // TODO:
-    // let mint = await splToken.Token.createMint(connection, myKeypair, myKeypair.publicKey, null, 9, splToken.TOKEN_PROGRAM_ID);
-    //
-    // Get the token accont of this solana address, if it does not exist, create it
-    // myToken = await mint.getOrCreateAssociatedAccountInfo(myKeypair.publicKey);
-    //
-    // Check if enough tokens are available, if not -> Mint 100 new tokens to the token address we just created
-    // await mint.mintTo(myToken.address, myKeypair.publicKey, [], 1000000000);
-  }
+/**
+ * Check amount of tokens in account and mint more if needed
+ * @param {Connection} f_connection 
+ * @param {Keypair} f_token_owner 
+ * @param {PublicKey} f_mint_pk 
+ * @param {PublicKey} f_token_account_pk 
+ * @returns {number} Token amount
+ */
+export async function checkTokenAmountAndMintIfNeeded(f_connection, f_token_owner, f_mint_pk, f_token_account_pk) {
+    let token_balance = await f_connection.getTokenAccountBalance(f_token_account_pk);
+    if (token_balance < 5) {
+        let mint_signature = await splToken.mintTo(
+            f_connection,
+            f_token_owner,
+            f_mint_pk,
+            f_token_account_pk,
+            f_token_owner,
+            2
+        );
+
+        const latest_block_hash = await f_connection.getLatestBlockhash();
+        await f_connection.confirmTransaction({
+        blockhash: latest_block_hash.blockhash,
+        lastValidBlockHeight: latest_block_hash.lastValidBlockHeight,
+        signature: mint_signature,
+        });
+
+        token_balance = await f_connection.getTokenAccountBalance(f_token_account_pk);
+    }
+    return token_balance;
+}
