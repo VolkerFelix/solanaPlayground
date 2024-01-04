@@ -16,6 +16,14 @@ pub mod game_record {
 
         Ok(())
     }
+
+    pub fn reset_game(ctx: Context<ResetGame>) -> Result<()> {
+        ctx.accounts
+            .game
+            .reset();
+
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -25,4 +33,10 @@ pub struct SetupGame<'info> {
     #[account(mut)]
     pub player_one: Signer<'info>,
     pub system_program: Program<'info, System>
+}
+
+#[derive(Accounts)]
+pub struct ResetGame<'info> {
+    #[account(mut)]
+    pub game: Account<'info, Game>
 }

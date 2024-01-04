@@ -10,9 +10,16 @@ pub struct Game {
 
 impl Game {
     pub fn start(&mut self, f_players: [Pubkey; 2]) -> Result<()> {
-        //(self.state, GameState::NotStarted, GameError::GameAlreadyStarted);
+        require!(self.state == GameState::NotStarted, GameError::GameAlreadyStarted);
         self.players = f_players;
         self.state = GameState::Active;
+
+        Ok(())
+    }
+
+    pub fn reset(&mut self) -> Result<()> {
+        require!(self.state == GameState::Active, GameError::GameNotActive);
+        self.state = GameState::NotStarted;
 
         Ok(())
     }

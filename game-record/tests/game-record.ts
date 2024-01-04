@@ -1,6 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { GameRecord } from "../target/types/game_record";
+import { expect } from "chai";
 
 describe("game-record", () => {
   // Configure the client to use the local cluster.
@@ -9,7 +10,7 @@ describe("game-record", () => {
   const program = anchor.workspace.GameRecord as Program<GameRecord>;
   const programProvider = program.provider as anchor.AnchorProvider;
 
-  it("Setup game!", async () => {
+  it("Setup game and reset it!", async () => {
     const gameKeypair = anchor.web3.Keypair.generate();
     const playerOne = programProvider.wallet;
     const playerTwo = anchor.web3.Keypair.generate();
@@ -22,5 +23,22 @@ describe("game-record", () => {
       .signers([gameKeypair])
       .rpc()
 
+    let gameState = await program.account.game.fetch(gameKeypair.publicKey);
+    expect(gameState.players).to.eql([playerOne.publicKey, playerTwo.publicKey]);
+    expect(gameState.state).to.eql({ active: {} });
+
+    await program.methods
+      .resetGame()
+      .accounts({
+        game: gameKeypair.publicKey
+      })
+      .signers([gameKeypair])
+      .rpc()
+
+      gameState = await program.account.game.fetch(gameKeypair.publicKey);
+      console.log("Game state: ", gameState);
+
+      expect(gameState.players).to.eql([playerOne.publicKey, playerTwo.publicKey]);
+      expect(gameState.state).to.eql({ notStarted: {} });
   });
 });
