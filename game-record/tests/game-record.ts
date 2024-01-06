@@ -20,7 +20,7 @@ describe("game-record", () => {
         game: gameKeypair.publicKey,
         playerOne: playerOne.publicKey,
       })
-      .signers([gameKeypair])
+      .signers([gameKeypair]) //New game account is created and this needs to be signed.
       .rpc()
 
     let gameState = await program.account.game.fetch(gameKeypair.publicKey);
@@ -30,14 +30,13 @@ describe("game-record", () => {
     await program.methods
       .resetGame()
       .accounts({
-        game: gameKeypair.publicKey
+        game: gameKeypair.publicKey,
+        player: playerOne.publicKey,
       })
-      .signers([gameKeypair])
+      .signers([]) // Signer is playerOne, which is the program provider and automatically signs all transactions
       .rpc()
 
       gameState = await program.account.game.fetch(gameKeypair.publicKey);
-      console.log("Game state: ", gameState);
-
       expect(gameState.players).to.eql([playerOne.publicKey, playerTwo.publicKey]);
       expect(gameState.state).to.eql({ notStarted: {} });
   });

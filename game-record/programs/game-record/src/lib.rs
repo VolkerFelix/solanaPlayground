@@ -38,5 +38,6 @@ pub struct SetupGame<'info> {
 #[derive(Accounts)]
 pub struct ResetGame<'info> {
     #[account(mut)]
-    pub game: Account<'info, Game>
+    pub game: Account<'info, Game>,
+    pub player: Signer<'info>
 }
