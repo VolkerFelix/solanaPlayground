@@ -4,7 +4,7 @@ use crate::game::errors::GameError;
 
 #[account]
 pub struct Game {
-    players: [Pubkey; 2],
+    pub players: [Pubkey; 2],
     state: GameState,
 }
 
@@ -20,6 +20,12 @@ impl Game {
     pub fn reset(&mut self) -> Result<()> {
         require!(self.state == GameState::Active, GameError::GameNotActive);
         self.state = GameState::NotStarted;
+
+        Ok(())
+    }
+
+    pub fn won(&mut self, f_winner: Pubkey) -> Result<()> {
+        self.state = GameState::Won { winner: f_winner };
 
         Ok(())
     }
