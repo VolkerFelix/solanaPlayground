@@ -76,4 +76,51 @@ describe("game-record", () => {
       expect(gameState.players).to.eql([playerOne.publicKey, playerTwo.publicKey]);
       expect(gameState.state).to.eql({ won: { winner: playerTwo.publicKey } });
   });
+
+  it("Setup game, tie and reset it!", async () => {
+    const gameKeypair = anchor.web3.Keypair.generate();
+    const playerOne = programProvider.wallet;
+    const playerTwo = anchor.web3.Keypair.generate();
+    await program.methods
+      .setupGame()
+      .accounts({
+        game: gameKeypair.publicKey,
+        playerOne: playerOne.publicKey,
+        playerTwo: playerTwo.publicKey,
+      })
+      .signers([playerTwo, gameKeypair]) // gameKeypair: New game account is created and this needs to be signed.
+      .rpc()
+
+    let gameState = await program.account.game.fetch(gameKeypair.publicKey);
+    expect(gameState.players).to.eql([playerOne.publicKey, playerTwo.publicKey]);
+    expect(gameState.state).to.eql({ active: {} });
+
+    await program.methods
+      .tieGame()
+      .accounts({
+        game: gameKeypair.publicKey,
+        playerOne: playerOne.publicKey,
+        playerTwo: playerTwo.publicKey,
+      })
+      .signers([playerTwo]) // Signer is playerOne, which is the program provider and automatically signs all transactions
+      .rpc()
+
+      gameState = await program.account.game.fetch(gameKeypair.publicKey);
+      expect(gameState.players).to.eql([playerOne.publicKey, playerTwo.publicKey]);
+      expect(gameState.state).to.eql({ tie: {} });
+
+      await program.methods
+      .resetGame()
+      .accounts({
+        game: gameKeypair.publicKey,
+        playerOne: playerOne.publicKey,
+        playerTwo: playerTwo.publicKey,
+      })
+      .signers([playerTwo]) // Signer is playerOne, which is the program provider and automatically signs all transactions
+      .rpc()
+
+      gameState = await program.account.game.fetch(gameKeypair.publicKey);
+      expect(gameState.players).to.eql([playerOne.publicKey, playerTwo.publicKey]);
+      expect(gameState.state).to.eql({ notStarted: {} });
+  });
 });

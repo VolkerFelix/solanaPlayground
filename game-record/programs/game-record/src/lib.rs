@@ -25,10 +25,18 @@ pub mod game_record {
         Ok(())
     }
 
-    pub fn won_game(ctx:Context<Play>, f_winner: Pubkey) -> Result<()> {
+    pub fn won_game(ctx: Context<Play>, f_winner: Pubkey) -> Result<()> {
         ctx.accounts
             .game
             .won(f_winner);
+
+        Ok(())
+    }
+
+    pub fn tie_game(ctx: Context<Play>) -> Result<()> {
+        ctx.accounts
+            .game
+            .tie();
 
         Ok(())
     }
@@ -48,7 +56,7 @@ pub struct SetupGame<'info> {
 pub struct Play<'info> {
     #[account(mut)]
     pub game: Account<'info, Game>,
-    // Both players need to agree (sign) to reset
+    // Both players need to agree (sign) always
     pub player_one: Signer<'info>,
     pub player_two: Signer<'info>
 }

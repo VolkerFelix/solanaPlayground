@@ -18,7 +18,6 @@ impl Game {
     }
 
     pub fn reset(&mut self) -> Result<()> {
-        require!(self.state == GameState::Active, GameError::GameNotActive);
         self.state = GameState::NotStarted;
 
         Ok(())
@@ -26,6 +25,12 @@ impl Game {
 
     pub fn won(&mut self, f_winner: Pubkey) -> Result<()> {
         self.state = GameState::Won { winner: f_winner };
+
+        Ok(())
+    }
+
+    pub fn tie(&mut self) -> Result<()> {
+        self.state = GameState::Tie;
 
         Ok(())
     }
