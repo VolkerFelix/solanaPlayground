@@ -22,17 +22,18 @@ try {
 } catch (e) {
   console.log(e);
 }
-let connection = getSolanaConnection(SolanaConnections.LOCAL);
-let result = await checkBalanceAndAirdropIfNeeded(kp_token_owner, connection);
+let connection = getSolanaConnection(SolanaConnections.DEVNET);
+//let result = await checkBalanceAndAirdropIfNeeded(kp_token_owner, connection);
+let result = await connection.getAccountInfo(kp_token_owner.publicKey);
 
 console.log("Balance token owner: ", result);
 
-let [mint_pk, tokens_pk] = await initMintAndTokenAccount(connection, kp_token_owner);
-let token_balance = await checkTokenAmountAndMintIfNeeded(connection, kp_token_owner, mint_pk, tokens_pk);
+// let [mint_pk, tokens_pk] = await initMintAndTokenAccount(connection, kp_token_owner);
+// let token_balance = await checkTokenAmountAndMintIfNeeded(connection, kp_token_owner, mint_pk, tokens_pk);
 
-console.log("Mint PK: ", mint_pk);
-console.log("Token PK: ", tokens_pk);
-console.log("Token balance: ", token_balance);
+// console.log("Mint PK: ", mint_pk);
+// console.log("Token PK: ", tokens_pk);
+// console.log("Token balance: ", token_balance);
 
 class CPlayer {
   constructor(name, pk) {
