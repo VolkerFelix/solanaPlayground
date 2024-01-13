@@ -7,7 +7,7 @@ import {
   getKp, Participants, getSolanaConnection, SolanaConnections, checkBalanceAndAirdropIfNeeded,
   initMintAndTokenAccount, checkTokenAmountAndMintIfNeeded
 } from "./solana_stuff.js"
-import {AnchorProvider, Program} from "@project-serum/anchor"
+import * as anchor from "@coral-xyz/anchor";
 
 import * as buffer from "buffer";
 window.Buffer = buffer.Buffer;
@@ -35,10 +35,37 @@ let result_o = await checkBalanceAndAirdropIfNeeded(kp_o, connection);
 console.log("Account X: ", result_x);
 console.log("Account O: ", result_o);
 
-const provider = new AnchorProvider(connection, kp_x);
-const programm = new Program(idl, kp_game_record.publicKey, provider);
+// Controls how we want to acknowledge when a transaction is "done".
+const opts = {
+  preflightCommitment: "processed",
+};
 
-console.log("Programm: ", programm);
+var isBrowser = process.env.BROWSER ||
+  (typeof window !== "undefined" && !window.process?.hasOwnProperty("type"));
+
+let wallet = new anchor.Wallet(kp_x);
+
+const provider = new anchor.AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
+const program = new anchor.Program(idl, kp_game_record.publicKey, provider);
+
+console.log("Programm: ", program);
+
+// Create game storage account
+let game_storage_kp = Keypair.generate();
+
+// Init game
+await program.methods
+  .setupGame()
+  .accounts({
+    game: game_storage_kp.publicKey,
+    playerOne: kp_x.publicKey,
+    playerTwo: kp_o.publicKey,
+  })
+  .signers([kp_x, kp_o, game_storage_kp]) // gameKeypair: New game account is created and this needs to be signed.
+  .rpc()
+
+let gameState = await program.account.game.fetch(game_storage_kp.publicKey);
+console.log("Game state: ", gameState);
 
 // let [mint_pk, tokens_pk] = await initMintAndTokenAccount(connection, kp_token_owner);
 // let token_balance = await checkTokenAmountAndMintIfNeeded(connection, kp_token_owner, mint_pk, tokens_pk);
