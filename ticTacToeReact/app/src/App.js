@@ -7,26 +7,38 @@ import {
   getKp, Participants, getSolanaConnection, SolanaConnections, checkBalanceAndAirdropIfNeeded,
   initMintAndTokenAccount, checkTokenAmountAndMintIfNeeded
 } from "./solana_stuff.js"
+import {AnchorProvider, Program} from "@project-serum/anchor"
 
 import * as buffer from "buffer";
 window.Buffer = buffer.Buffer;
 
+import idl from "./idl/game_record.json"
+
 let kp_x = null;
 let kp_o = null;
 let kp_token_owner = null;
+let kp_game_record = null;
 
 try {
   kp_x = getKp(Participants.X);
   kp_o = getKp(Participants.O);
-  kp_token_owner = getKp(Participants.TOKEN_OWNER);
+  kp_game_record = getKp(Participants.GAME_RECORD);
+  //kp_token_owner = getKp(Participants.TOKEN_OWNER);
 } catch (e) {
   console.log(e);
 }
-let connection = getSolanaConnection(SolanaConnections.DEVNET);
-//let result = await checkBalanceAndAirdropIfNeeded(kp_token_owner, connection);
-let result = await connection.getAccountInfo(kp_token_owner.publicKey);
 
-console.log("Balance token owner: ", result);
+let connection = getSolanaConnection(SolanaConnections.DEVNET);
+
+let result_x = await checkBalanceAndAirdropIfNeeded(kp_x, connection);
+let result_o = await checkBalanceAndAirdropIfNeeded(kp_o, connection);
+console.log("Account X: ", result_x);
+console.log("Account O: ", result_o);
+
+const provider = new AnchorProvider(connection, kp_x);
+const programm = new Program(idl, kp_game_record.publicKey, provider);
+
+console.log("Programm: ", programm);
 
 // let [mint_pk, tokens_pk] = await initMintAndTokenAccount(connection, kp_token_owner);
 // let token_balance = await checkTokenAmountAndMintIfNeeded(connection, kp_token_owner, mint_pk, tokens_pk);

@@ -6,14 +6,16 @@ import {
 import * as splToken from "@solana/spl-token";
 
 
-import secret_x_json from "./keypair/player_x.json";
-import secret_o_json from "./keypair/player_o.json";
+import player_x_kp_json from "./keypair/player_x_kp.json";
+import player_o_kp_json from "./keypair/player_o_kp.json";
 import secret_token_owner_json from "./keypair/token_owner.json";
+import game_record_kp_json from "./keypair/game_record-keypair.json"
 
 export const Participants = Object.freeze({
     X: Symbol("x"),
     O: Symbol("o"),
-    TOKEN_OWNER: Symbol("token_owner")
+    TOKEN_OWNER: Symbol("token_owner"),
+    GAME_RECORD: Symbol("game_record"),
 });
 
 /**
@@ -25,16 +27,22 @@ export function getKp(f_participant) {
     let kp;
     switch (f_participant) {
         case Participants.X:
-            const secret_x_a_u8 = Uint8Array.from(secret_x_json);
+            const kp_x_arr = Object.values(player_x_kp_json._keypair.secretKey);
+            const secret_x_a_u8 = Uint8Array.from(kp_x_arr);
             kp = Keypair.fromSecretKey(secret_x_a_u8);
             break;
         case Participants.O:
-            const secret_o_a_u8 = Uint8Array.from(secret_o_json);
+            const kp_o_arr = Object.values(player_o_kp_json._keypair.secretKey);
+            const secret_o_a_u8 = Uint8Array.from(kp_o_arr);
             kp = Keypair.fromSecretKey(secret_o_a_u8);
             break;
         case Participants.TOKEN_OWNER:
             const secret_token_owner_a_u8 = Uint8Array.from(secret_token_owner_json);
             kp = Keypair.fromSecretKey(secret_token_owner_a_u8);
+            break;
+        case Participants.GAME_RECORD:
+            const secret_game_record_a_u8 = Uint8Array.from(game_record_kp_json);
+            kp = Keypair.fromSecretKey(secret_game_record_a_u8);
             break;
         default:
             throw "Unexpected argument. Needs to be of type 'Participant'.";
@@ -82,12 +90,11 @@ export async function checkBalanceAndAirdropIfNeeded(f_kp, f_connection) {
     let balance;
     try {
         balance = await f_connection.getBalance(f_kp.publicKey);
-        console.log("Inital balance: ", balance);
-        if (balance < LAMPORTS_PER_SOL) {
+        if (balance < 0.001 * LAMPORTS_PER_SOL) {
             // Request airdrop
             let airdrop_signature = await f_connection.requestAirdrop(
                 f_kp.publicKey,
-                2 * LAMPORTS_PER_SOL
+                LAMPORTS_PER_SOL
             );
     
             const latest_block_hash = await f_connection.getLatestBlockhash();
