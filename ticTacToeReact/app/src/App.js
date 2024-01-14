@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Keypair, Connection, PublicKey, Cluster, clusterApiUrl,
   LAMPORTS_PER_SOL, Transaction, SystemProgram, sendAndConfirmTransaction
 } from "@solana/web3.js";
@@ -8,6 +8,7 @@ import {
   initMintAndTokenAccount, checkTokenAmountAndMintIfNeeded
 } from "./solana_stuff.js"
 import * as anchor from "@coral-xyz/anchor";
+//import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 import * as buffer from "buffer";
 window.Buffer = buffer.Buffer;
@@ -30,42 +31,40 @@ try {
 
 let connection = getSolanaConnection(SolanaConnections.DEVNET);
 
-let result_x = await checkBalanceAndAirdropIfNeeded(kp_x, connection);
-let result_o = await checkBalanceAndAirdropIfNeeded(kp_o, connection);
-console.log("Account X: ", result_x);
-console.log("Account O: ", result_o);
+// let result_x = checkBalanceAndAirdropIfNeeded(kp_x, connection);
+// let result_o = checkBalanceAndAirdropIfNeeded(kp_o, connection);
+// console.log("Account X: ", result_x);
+// console.log("Account O: ", result_o);
 
 // Controls how we want to acknowledge when a transaction is "done".
-const opts = {
-  preflightCommitment: "processed",
-};
+// const opts = {
+//   preflightCommitment: "processed",
+// };
 
-var isBrowser = process.env.BROWSER ||
-  (typeof window !== "undefined" && !window.process?.hasOwnProperty("type"));
+//let wallet_x = new NodeWallet(kp_x);
+// let wallet_x = kp_x;
 
-let wallet = new anchor.Wallet(kp_x);
+// const provider = new anchor.AnchorProvider(connection, wallet_x, opts.preflightCommitment);
+// const program = new anchor.Program(idl, kp_game_record.publicKey, provider);
 
-const provider = new anchor.AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
-const program = new anchor.Program(idl, kp_game_record.publicKey, provider);
+// console.log("Programm: ", program);
 
-console.log("Programm: ", program);
+// // Create game storage account
+// let game_storage_kp = Keypair.generate();
 
-// Create game storage account
-let game_storage_kp = Keypair.generate();
+// // Init game
+// await program.methods
+//   .setupGame()
+//   .accounts({
+//     game: game_storage_kp.publicKey,
+//     playerOne: provider.wallet.publicKey,
+//     playerTwo: kp_o.publicKey,
+//   })
+//   .signers([kp_o, game_storage_kp]) // gameKeypair: New game account is created and this needs to be signed.
+//   .rpc()
 
-// Init game
-await program.methods
-  .setupGame()
-  .accounts({
-    game: game_storage_kp.publicKey,
-    playerOne: kp_x.publicKey,
-    playerTwo: kp_o.publicKey,
-  })
-  .signers([kp_x, kp_o, game_storage_kp]) // gameKeypair: New game account is created and this needs to be signed.
-  .rpc()
-
-let gameState = await program.account.game.fetch(game_storage_kp.publicKey);
-console.log("Game state: ", gameState);
+// let gameState = await program.account.game.fetch(game_storage_kp.publicKey);
+// console.log("Game state: ", gameState);
 
 // let [mint_pk, tokens_pk] = await initMintAndTokenAccount(connection, kp_token_owner);
 // let token_balance = await checkTokenAmountAndMintIfNeeded(connection, kp_token_owner, mint_pk, tokens_pk);
@@ -193,6 +192,35 @@ export default function Game() {
   const [currentMove, setCurrentMove] = useState(0);
   const xIsNext = currentMove % 2 === 0;
   const currentSquares = history[currentMove];
+  const [walletAddress, setWalletAddress] = useState(null);
+
+  useEffect(() => {
+    const onLoad = async () => {
+      await checkIfWalletConnected();
+    };
+    window.addEventListener("load", onLoad);
+    return () => window.removeEventListener("load", onLoad);
+  }, []);
+
+  const checkIfWalletConnected = async () => {
+    try {
+      const { solana } = window;
+      if (solana) {
+        if (solana.isPhantom) {
+          console.log("Phantom wallet detected!");
+
+          const response = await solana.connect({ onlyIfTrusted: true });
+          console.log("Connected wallet:", response.publicKey.toString());
+
+          setWalletAddress(response.publicKey.toString());
+        }
+      } else {
+        alert("No Solana wallet detected - go get yourself a Phantom wallet!");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   function handlePlay(nextSquares){
     const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
